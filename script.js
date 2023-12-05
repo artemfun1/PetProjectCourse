@@ -4,20 +4,24 @@ const modal = document.querySelector('#modal');
 const content = document.querySelector('#content');
 const backdrop = document.querySelector('#modal-backdrop');
 const progress = document.querySelector('#progress')
+const form = document.querySelector('#form')
+form.addEventListener('submit',createTech)
 
 
 const APP_TITLE = document.title
+const LS_KEY = 'MY_TECHS'
+
 
 
 content.addEventListener('click', openCard);
 modal.addEventListener('change', toggleTech)
 
+
+
 function openCard(event) {
   const data = event.target.dataset
   const tech = technologies.find(t => t.type === data.type)
-
   if (!tech) return
- 
   openModal(toModal(tech), tech.title)
   
 }
@@ -39,7 +43,8 @@ function toggleTech(event){
   const type = event.target.dataset.type
   const tech = technologies.find(t => t.type === type)
   tech.done = event.target.checked
-  init()
+  saveState()
+  init() 
 }
 
 function openModal(html, title){
@@ -48,25 +53,12 @@ function openModal(html, title){
   modal.classList.add('open');
 }
 
-
 backdrop.onclick = function () {
   modal.classList.remove('open');
   document.title = APP_TITLE
 };
 
-const technologies = [
-  {
-    title: 'HTML',
-    discription: 'HTML text',
-    type: 'html',
-    done: true,
-  },
-  { title: 'CSS', 
-  discription: 'CSS text',
-   type: 'css', 
-   done: false},
-   
-];
+const technologies = getState()
 
 function init(){
 renderCards()
@@ -121,6 +113,54 @@ function toCard(tech){
   <h3 data-type="${tech.type}">${tech.title}</h3>
 </div>
 `
+}
+
+function isInvalid(title,description){
+  return !title.value || ! description.value
+
+}
+
+
+function createTech(event){
+  event.preventDefault()
+
+  const {title,description}= event.target
+
+if(isInvalid(title,description)){
+  if(!title.value) title.classList.add('invalid')
+  if(!description.value) description.classList.add('invalid')
+
+  setTimeout(()=>{
+  title.classList.remove('invalid')
+  description.classList.remove('invalid')
+  },2000)
+  return
+}
+
+  const  newTech = {
+    title: title.value,
+    description: description.value,
+    done:false,
+    type: title.value.toLowerCase()
+  }
+technologies.push(newTech)
+title.value =''
+description.value = ''
+saveState()
+init()
+
+}
+
+
+function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(technologies))
+}
+
+
+function getState(){
+  const raw =  localStorage.getItem(LS_KEY)
+  return raw? JSON.parse(raw) : []
+
 }
 
 
